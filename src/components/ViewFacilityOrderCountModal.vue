@@ -11,17 +11,9 @@
   </ion-header>
 
   <ion-content>
-    <ion-grid v-if="facilityOrderCounts.length && !isLoading">
-      <ion-row class="ion-justify-content-center">
-        <ion-col>{{ translate('Entry Date') }}</ion-col>
-        <ion-col>{{ translate('Consumed Order Limit') }}</ion-col>
-      </ion-row>
-      <ion-row class="ion-justify-content-center" v-for="facilityOrderCount in facilityOrderCounts" :key="facilityOrderCount.facilityId">
-        <ion-col>{{ facilityOrderCount.entryDate }}</ion-col>
-        <ion-col>{{ facilityOrderCount.lastOrderCount }}</ion-col>
-      </ion-row>
-    </ion-grid>
-    <div v-else-if="!isLoading" class="ion-text-center ion-padding-top">
+    <BarChart v-if="facilityOrderCounts.length && !isLoading" :labels="chartData.labels" :data="chartData.data" :title="translate('Daily Consumed Orders')" />
+    
+    <div v-else class="empty-state">
       {{ translate('No records found') }}
     </div>
   </ion-content>
@@ -31,34 +23,30 @@
 import {
   IonButton,
   IonButtons,
-  IonCol,
   IonContent,
-  IonGrid,
   IonHeader,
   IonIcon,
-  IonRow,
   IonTitle,
   IonToolbar,
   modalController
 } from "@ionic/vue";
 import { defineComponent } from "vue";
-import { closeOutline, saveOutline } from "ionicons/icons";
+import { closeOutline } from "ionicons/icons";
 import { translate } from '@hotwax/dxp-components'
 import { FacilityService } from "@/services/FacilityService";
+import BarChart from '@/charts/BarChart.vue';
 
 export default defineComponent({
   name: "ViewFacilityOrderCountModal",
   components: {
     IonButton,
     IonButtons,
-    IonCol,
     IonContent,
-    IonGrid,
     IonHeader,
     IonIcon,
-    IonRow,
     IonTitle,
-    IonToolbar
+    IonToolbar,
+    BarChart
   },
   props: ["facilityId"],
   data() {
@@ -71,6 +59,14 @@ export default defineComponent({
     this.facilityOrderCounts = await FacilityService.fetchFacilityOrderCounts(this.facilityId)
     this.isLoading = false;
   },
+  computed: {
+    chartData() {
+      return {
+        labels: this.facilityOrderCounts.map(item => item.entryDate),
+        data: this.facilityOrderCounts.map(item => item.lastOrderCount)
+      }
+    }
+  },
   methods: {
     closeModal() {
       modalController.dismiss()
@@ -79,15 +75,8 @@ export default defineComponent({
   setup() {
     return {
       closeOutline,
-      saveOutline,
       translate
     };
   },
 });
 </script>
-
-<style>
-  ion-col {
-    text-align: center;
-  }
-</style>
